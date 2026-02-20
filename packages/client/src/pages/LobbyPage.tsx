@@ -32,11 +32,17 @@ export default function LobbyPage() {
       navigate(`/game/${roomCode}`);
     });
 
+    socket.on('lobbyKicked', () => {
+      setRoom(null);
+      navigate('/');
+    });
+
     return () => {
       socket.off('lobbyUpdate');
       socket.off('alienChoices');
       socket.off('gameStarted');
       socket.off('gameStateUpdate');
+      socket.off('lobbyKicked');
     };
   }, [roomCode, navigate, setRoom, setAlienChoices, setGameState]);
 
@@ -55,6 +61,15 @@ export default function LobbyPage() {
     const socket = getSocket();
     socket.emit('lobbySelectAlien', { alienId });
     setAlienChoices(null);
+  };
+
+  const handleKick = (targetPlayerId: string) => {
+    const socket = getSocket();
+    socket.emit('lobbyKick', { targetPlayerId }, (res: any) => {
+      if (res?.error) {
+        console.error('Kick failed:', res.error);
+      }
+    });
   };
 
   const handleCopyCode = () => {
@@ -150,6 +165,15 @@ export default function LobbyPage() {
               </span>
               {player.id === room.hostId && (
                 <span style={styles.hostBadge}>HOST</span>
+              )}
+              {isHost && player.id !== playerId && room.status === 'WAITING' && (
+                <button
+                  style={styles.kickButton}
+                  onClick={() => handleKick(player.id)}
+                  title={`Remove ${player.name} from lobby`}
+                >
+                  ✕
+                </button>
               )}
             </div>
           ))}
@@ -256,6 +280,25 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '2px 8px',
     borderRadius: '4px',
     marginLeft: 'auto',
+  },
+  kickButton: {
+    marginLeft: 'auto',
+    background: 'transparent',
+    border: '1px solid var(--accent-red, #e74c3c)',
+    color: 'var(--accent-red, #e74c3c)',
+    borderRadius: '4px',
+    width: '26px',
+    height: '26px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    lineHeight: 1,
+    padding: 0,
+    flexShrink: 0,
+    transition: 'all 0.15s',
   },
   actions: {
     display: 'flex',

@@ -121,6 +121,22 @@ export class LobbyManager {
     return room.players.every((p) => p.selectedAlien !== null);
   }
 
+  /**
+   * Kick a player from the lobby. Only the host can kick, and only while WAITING.
+   * Returns the updated room, or an error string.
+   */
+  kickPlayer(roomCode: string, hostId: PlayerId, targetId: PlayerId): LobbyRoom | string {
+    const room = this.rooms.get(roomCode);
+    if (!room) return 'Room not found';
+    if (room.status !== 'WAITING') return 'Cannot kick after game has started';
+    if (room.hostId !== hostId) return 'Only the host can kick players';
+    if (hostId === targetId) return 'Cannot kick yourself';
+    if (!room.players.some((p) => p.id === targetId)) return 'Player not in room';
+
+    room.players = room.players.filter((p) => p.id !== targetId);
+    return room;
+  }
+
   getRoom(roomCode: string): LobbyRoom | null {
     return this.rooms.get(roomCode.toUpperCase()) ?? null;
   }

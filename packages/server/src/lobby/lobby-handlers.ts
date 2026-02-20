@@ -92,6 +92,39 @@ export function setupLobbyHandlers(
     }
   });
 
+  // Kick player from lobby (host only, before game starts)
+  socket.on('lobbyKick', (data: { targetPlayerId: string }, callback) => {
+    const session = sessionManager.getSessionBySocketId(socket.id);
+    if (!session?.roomId) {
+      callback?.({ error: 'Not in a room' });
+      return;
+    }
+
+    const result = lobbyManager.kickPlayer(session.roomId, session.playerId, data.targetPlayerId);
+    if (typeof result === 'string') {
+      callback?.({ error: result });
+      return;
+    }
+
+    // Notify the kicked player directly, then remove them from the socket room
+    const kickedSession = sessionManager.getSessionByPlayerId(data.targetPlayerId);
+    if (kickedSession?.socketId) {
+      const kickedSocket = io.sockets.sockets.get(kickedSession.socketId);
+      if (kickedSocket) {
+        kickedSocket.emit('lobbyKicked', { reason: 'You were removed from the lobby by the host.' });
+        kickedSocket.leave(session.roomId);
+      }
+    }
+
+    // Clear the kicked player's room association
+    if (kickedSession) {
+      kickedSession.roomId = null;
+    }
+
+    callback?.({ success: true });
+    io.to(session.roomId).emit('lobbyUpdate', { room: result });
+  });
+
   // Start game (host only)
   socket.on('lobbyStartGame', () => {
     const session = sessionManager.getSessionBySocketId(socket.id);

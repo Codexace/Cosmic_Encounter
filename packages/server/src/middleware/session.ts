@@ -99,4 +99,12 @@ export class SessionManager {
       this.setRoom(token, roomId);
     }
   }
+
+  /** Find session data by playerId (iterates all sessions). */
+  getSessionByPlayerId(playerId: PlayerId): SessionData | null {
+    for (const session of this.sessions.values()) {
+      if (session.playerId === playerId) return session;
+    }
+    return null;
+  }
 }

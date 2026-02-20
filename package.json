@@ -1,0 +1,22 @@
+{
+  "name": "cosmic-encounter",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:shared": "npm run build -w packages/shared",
+    "build:server": "npm run build -w packages/server",
+    "build:client": "npm run build -w packages/client",
+    "dev": "concurrently \"npm run dev -w packages/server\" \"npm run dev -w packages/client\"",
+    "dev:server": "npm run dev -w packages/server",
+    "dev:client": "npm run dev -w packages/client",
+    "typecheck": "npm run typecheck --workspaces",
+    "clean": "npm run clean --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.0"
+  }
+}

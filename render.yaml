@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: cosmic-encounter
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build:shared && npm run build:client && npm run build:server
+    startCommand: node packages/server/dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
